@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="A lightweight, high-performance CachyOS package manager desktop GUI." />
+    <title>CachyOS Package Manager</title>
+    <link rel="icon" type="image/png" href="/src/assets/favicon.png" />
+    <link rel="stylesheet" href="/src/styles.css" />
+    <script type="module" src="/src/main.ts" defer></script>
+  </head>
+  <body>
+    <div class="app-container">
+      <!-- SIDEBAR -->
+      <aside class="sidebar">
+        <div>
+          <nav class="nav-menu">
+            <div id="nav-discover" class="nav-item active" title="Discover Packages">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+              </svg>
+            </div>
+            
+            <div id="nav-installed" class="nav-item" title="Installed Packages">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+          </nav>
+        </div>
+        
+        <!-- System Health and Status Dot with Custom Popover -->
+        <div class="system-status" id="system-status-container">
+          <span id="status-indicator" class="status-dot"></span>
+          <span id="status-description" style="display: none;">Pacman & Paru connected</span>
+          <div id="status-popover" class="status-popover">Pacman & Paru connected</div>
+        </div>
+      </aside>
+
+      <!-- MAIN CONTAINER -->
+      <main class="main-panel">
+        <!-- HEADER -->
+        <header class="header">
+          <h1 class="page-title" id="main-view-title">Discover Packages</h1>
+          
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <!-- Unified Search Bar (Adaptive context based on active tab) -->
+            <div class="search-container">
+              <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+              </svg>
+              <input type="text" id="search-input" class="search-input" placeholder="Search official repositories and AUR..." />
+            </div>
+            <!-- Sleek Glassmorphic Layout switcher button -->
+            <button id="layout-toggle-btn" class="layout-toggle-btn" title="Switch to List Layout">
+              <svg id="layout-toggle-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 18px; height: 18px;">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+              </svg>
+            </button>
+          </div>
+        </header>
+
+        <!-- CONTENT SCROLL VIEW -->
+        <div class="content-view">
+          
+          <!-- VIEW SECTION: DISCOVER -->
+          <section id="discover-view" class="view-section active">
+            <div id="discover-packages-grid" class="package-grid">
+              <!-- Dynamically populated package cards -->
+              <div class="empty-state">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                </svg>
+                <h3>Start Searching</h3>
+                <p>Type in the search bar above to look up unified official repository and AUR packages.</p>
+              </div>
+            </div>
+          </section>
+
+          <!-- VIEW SECTION: INSTALLED -->
+          <section id="installed-view" class="view-section">
+            <!-- Sleek sub-header filter bar inside Installed packages -->
+            <div class="filter-bar">
+              <button id="filter-all-btn" class="filter-btn active">
+                All Installed
+                <span id="all-count-badge" class="count-badge">0</span>
+              </button>
+              <button id="filter-official-btn" class="filter-btn">
+                Official Only
+                <span id="official-count-badge" class="count-badge">0</span>
+              </button>
+              <button id="filter-aur-btn" class="filter-btn">
+                AUR Only
+                <span id="aur-count-badge" class="count-badge">0</span>
+              </button>
+              <button id="filter-updates-btn" class="filter-btn">
+                Updates Only
+                <span id="updates-count-badge" class="count-badge">0</span>
+              </button>
+            </div>
+            
+            <div id="installed-packages-grid" class="package-grid">
+              <!-- Dynamically populated locally installed package cards -->
+              <div class="empty-state">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                </svg>
+                <h3>Loading Installed Packages</h3>
+                <p>Fetching explicitly installed pacman packages...</p>
+              </div>
+            </div>
+          </section>
+          
+        </div>
+
+        <!-- TERMINAL TRANSACTION LOGGER -->
+        <footer class="terminal-console" id="terminal-console">
+          <!-- Resize Handle for Vertical Dragging -->
+          <div class="terminal-resizer" id="terminal-resizer"></div>
+          <!-- Terminal Header Tab -->
+          <div class="terminal-header" id="terminal-header-bar">
+            <div class="terminal-title">
+              <span id="terminal-spinner" style="display: none;" class="spinner"></span>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 16px; height: 16px;">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 7.5l3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0021 18.75V5.25A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25v13.5A2.25 2.25 0 005.25 21z" />
+              </svg>
+              <span id="terminal-title-text">Terminal Log</span>
+            </div>
+            <div class="terminal-controls">
+              <!-- Abort active transaction button -->
+              <button id="terminal-abort-btn" class="terminal-btn abort">Abort Process</button>
+              
+              <!-- Clear output screen button -->
+              <button id="terminal-clear-btn" class="terminal-btn" title="Clear Screen">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 16px; height: 16px;">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                </svg>
+              </button>
+              
+              <!-- Collapse / Expand button -->
+              <button id="terminal-toggle-btn" class="terminal-btn" title="Toggle Size">
+                <svg id="terminal-toggle-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 16px; height: 16px;">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          <!-- Terminal Output Lines -->
+          <div class="terminal-body" id="terminal-body">
+            <div class="terminal-line system">-- CachyOS Package Manager Terminal System Ready --</div>
+          </div>
+        </footer>
+      </main>
+    </div>
+
+    <!-- INTERACTIVE PACKAGE DETAILS OVERLAY MODAL -->
+    <div id="package-detail-modal" class="modal-overlay">
+      <div class="modal-content">
+        <!-- Header -->
+        <div class="modal-header">
+          <div class="modal-pkg-info">
+            <h2 id="modal-pkg-name" class="modal-pkg-name">package-name</h2>
+            <div class="modal-pkg-meta">
+              <span id="modal-pkg-version" class="modal-pkg-version">0.0.0</span>
+              <span id="modal-pkg-repo" class="repo-badge official">official</span>
+              <span id="modal-pkg-upgrade-badge" class="upgrade-badge-alert" style="display: none;">Update Available</span>
+            </div>
+          </div>
+          <button id="modal-close-btn" class="modal-close-btn" title="Close Panel">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" style="width: 20px; height: 20px;">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Body -->
+        <div class="modal-body" id="modal-body-content">
+          <!-- Populated dynamically with key-value data -->
+          <div class="modal-spinner-container" id="modal-loading-indicator">
+            <span class="spinner" style="width: 32px; height: 32px; color: var(--primary);"></span>
+            <div style="margin-top: 12px; font-size: 0.9rem; color: var(--text-muted);">Fetching rich metadata...</div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="modal-footer">
+          <button id="modal-uninstall-btn" class="btn btn-accent" style="display: none;">Uninstall</button>
+          <button id="modal-action-btn" class="btn btn-primary">Install</button>
+          <button id="modal-close-footer-btn" class="btn btn-secondary">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- INTERACTIVE ACTION CONFIRMATION MODAL -->
+    <div id="confirmation-modal" class="modal-overlay">
+      <div class="modal-content" style="width: 480px; min-height: auto;">
+        <!-- Header -->
+        <div class="modal-header" style="padding: 18px 24px;">
+          <div class="modal-pkg-info">
+            <h2 id="confirm-modal-title" class="modal-pkg-name">Confirm Action</h2>
+          </div>
+          <button id="confirm-modal-close-btn" class="modal-close-btn" title="Close Panel">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" style="width: 18px; height: 18px;">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Body -->
+        <div class="modal-body" style="padding: 24px;">
+          <p id="confirm-modal-desc" style="font-size: 0.95rem; color: var(--text-main); line-height: 1.5; margin-bottom: 20px;">
+            Are you sure you want to perform this action?
+          </p>
+          
+          <!-- Version Picker container (shown only for Reinstalls) -->
+          <div id="confirm-version-picker-container" style="display: none; flex-direction: column; gap: 8px;">
+            <label for="confirm-version-select" style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">Select Version to Install:</label>
+            <select id="confirm-version-select" class="premium-select">
+              <!-- Populated dynamically with cached versions -->
+            </select>
+            <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 6px;">
+              * Cached versions are read from local pacman cache. Older cached versions will be installed offline via <code>pacman -U</code>.
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="modal-footer" style="padding: 16px 24px;">
+          <button id="confirm-modal-action-btn" class="btn btn-primary">Confirm</button>
+          <button id="confirm-modal-cancel-btn" class="btn btn-secondary">Cancel</button>
+        </div>
+      </div>
+    </div>
+    
+  </body>
+</html>
