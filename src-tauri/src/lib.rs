@@ -435,8 +435,21 @@ fn execute_package_update(
     version: Option<String>,
     state: tauri::State<'_, ActiveProcessState>,
 ) -> Result<String, String> {
-    // Check if we are doing a local file rollback/installation of a specific version
-    let mut cmd = if let Some(ver) = version {
+    // Check if we are doing a system-wide upgrade, local file rollback, or standard sync installation/upgrade
+    let mut cmd = if pkg_name == "__all__" {
+        // System-wide update
+        // Check if paru is available on the system
+        let paru_exists = Command::new("paru").arg("--version").output().is_ok();
+        if paru_exists {
+            let mut c = Command::new("paru");
+            c.args(["-Syu", "--noconfirm"]);
+            c
+        } else {
+            let mut c = Command::new("pkexec");
+            c.args(["pacman", "-Syu", "--noconfirm"]);
+            c
+        }
+    } else if let Some(ver) = version {
         if ver.starts_with("http://") || ver.starts_with("https://") {
             // Online archive install directly from URL
             let mut c = Command::new("pkexec");
@@ -468,7 +481,7 @@ fn execute_package_update(
             c
         }
     } else {
-        // Standard sync installation
+        // Standard sync installation/upgrade
         let is_aur = repo_type.to_lowercase() == "aur";
         if is_aur {
             let mut c = Command::new("paru");
@@ -476,7 +489,7 @@ fn execute_package_update(
             c
         } else {
             let mut c = Command::new("pkexec");
-            c.args(["pacman", "-S", "--noconfirm", &pkg_name]);
+            c.args(["pacman", "-Sy", "--noconfirm", &pkg_name]); // Added -y to synchronize databases first
             c
         }
     };

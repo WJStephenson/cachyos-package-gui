@@ -81,21 +81,30 @@
           <section id="installed-view" class="view-section">
             <!-- Sleek sub-header filter bar inside Installed packages -->
             <div class="filter-bar">
-              <button id="filter-all-btn" class="filter-btn active">
-                All Installed
-                <span id="all-count-badge" class="count-badge">0</span>
-              </button>
-              <button id="filter-official-btn" class="filter-btn">
-                Official Only
-                <span id="official-count-badge" class="count-badge">0</span>
-              </button>
-              <button id="filter-aur-btn" class="filter-btn">
-                AUR Only
-                <span id="aur-count-badge" class="count-badge">0</span>
-              </button>
-              <button id="filter-updates-btn" class="filter-btn">
-                Updates Only
-                <span id="updates-count-badge" class="count-badge">0</span>
+              <div class="filter-btn-group" style="display: flex; gap: 12px;">
+                <button id="filter-all-btn" class="filter-btn active">
+                  All Installed
+                  <span id="all-count-badge" class="count-badge">0</span>
+                </button>
+                <button id="filter-official-btn" class="filter-btn">
+                  Official Only
+                  <span id="official-count-badge" class="count-badge">0</span>
+                </button>
+                <button id="filter-aur-btn" class="filter-btn">
+                  AUR Only
+                  <span id="aur-count-badge" class="count-badge">0</span>
+                </button>
+                <button id="filter-updates-btn" class="filter-btn">
+                  Updates Only
+                  <span id="updates-count-badge" class="count-badge">0</span>
+                </button>
+              </div>
+              
+              <button id="update-all-btn" class="btn btn-upgrade" style="display: none;">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 16px; height: 16px;">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                </svg>
+                Update All
               </button>
             </div>
             

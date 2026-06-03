@@ -115,6 +115,7 @@ let filterAllBtn!: HTMLButtonElement;
 let filterOfficialBtn!: HTMLButtonElement;
 let filterAurBtn!: HTMLButtonElement;
 let filterUpdatesBtn!: HTMLButtonElement;
+let updateAllBtn!: HTMLButtonElement;
 let allCountBadge!: HTMLElement;
 let officialCountBadge!: HTMLElement;
 let aurCountBadge!: HTMLElement;
@@ -174,6 +175,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   filterOfficialBtn = document.getElementById("filter-official-btn") as HTMLButtonElement;
   filterAurBtn = document.getElementById("filter-aur-btn") as HTMLButtonElement;
   filterUpdatesBtn = document.getElementById("filter-updates-btn") as HTMLButtonElement;
+  updateAllBtn = document.getElementById("update-all-btn") as HTMLButtonElement;
   allCountBadge = document.getElementById("all-count-badge")!;
   officialCountBadge = document.getElementById("official-count-badge")!;
   aurCountBadge = document.getElementById("aur-count-badge")!;
@@ -223,6 +225,20 @@ window.addEventListener("DOMContentLoaded", async () => {
   filterOfficialBtn.addEventListener("click", () => switchInstalledFilter("official"));
   filterAurBtn.addEventListener("click", () => switchInstalledFilter("aur"));
   filterUpdatesBtn.addEventListener("click", () => switchInstalledFilter("updates"));
+  updateAllBtn.addEventListener("click", () => {
+    openConfirmationModal(
+      "Confirm Update All",
+      `Are you sure you want to update all ${upgradesList.length} packages to their latest versions? This will synchronize repositories and perform a system-wide upgrade.`,
+      "Update All",
+      "btn-upgrade",
+      false, // Hide version picker
+      "__all__",
+      "Official",
+      () => {
+        executePackageUpdateTransaction("__all__", "Official", "update");
+      }
+    );
+  });
 
   // Modal Closure Bindings
   modalCloseBtn.addEventListener("click", closeDetailsModal);
@@ -552,6 +568,11 @@ function performInstalledFilter(query: string) {
   }
 
   mainViewTitle.textContent = `Installed Packages (${packagesToRender.length})`;
+  if (activeInstalledFilter === "updates" && upgradesList.length > 0) {
+    updateAllBtn.style.display = "inline-flex";
+  } else {
+    updateAllBtn.style.display = "none";
+  }
   renderInstalledView(packagesToRender);
 }
 
@@ -628,7 +649,7 @@ function renderDiscoverView() {
             <div style="display: flex; gap: 8px; align-items: center; justify-content: space-between; width: 100%;">
               ${alertBadges}
               <div style="display: flex; gap: 8px;">
-                <button class="btn btn-upgrade" onclick="window.triggerPackageAction('${pkg.name}', '${upgrade!.repo_type}', true)">Update</button>
+                <button class="btn btn-upgrade" onclick="window.triggerPackageAction('${pkg.name}', '${upgrade!.repo_type}', 'update')">Update</button>
                 <button class="btn btn-accent" onclick="window.triggerUninstallAction('${pkg.name}', '${upgrade!.repo_type}')">Uninstall</button>
               </div>
             </div>
@@ -647,7 +668,7 @@ function renderDiscoverView() {
                   Installed
                 </span>
                 <div style="display: flex; gap: 8px; margin-left: 8px;">
-                  <button class="btn btn-secondary" onclick="window.triggerPackageAction('${pkg.name}', '${pkg.repo}', true)">Reinstall</button>
+                  <button class="btn btn-secondary" onclick="window.triggerPackageAction('${pkg.name}', '${pkg.repo}', 'reinstall')">Reinstall</button>
                   <button class="btn btn-accent" onclick="window.triggerUninstallAction('${pkg.name}', '${pkg.repo}')">Uninstall</button>
                 </div>
               </div>
@@ -660,7 +681,7 @@ function renderDiscoverView() {
         <div class="package-footer">
           <div style="display: flex; gap: 8px; align-items: center; justify-content: space-between; width: 100%;">
             ${alertBadges}
-            <button class="btn btn-primary" onclick="window.triggerPackageAction('${pkg.name}', '${pkg.repo}', false)">
+            <button class="btn btn-primary" onclick="window.triggerPackageAction('${pkg.name}', '${pkg.repo}', 'install')">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 16px; height: 16px;">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
               </svg>
@@ -753,7 +774,7 @@ function renderInstalledView(packagesList: LocalPackage[]) {
           <div style="display: flex; gap: 8px; align-items: center; justify-content: space-between; width: 100%;">
             ${alertBadges}
             <div style="display: flex; gap: 8px;">
-              <button class="btn btn-upgrade" onclick="window.triggerPackageAction('${pkg.name}', '${upgrade!.repo_type}', true)">Update</button>
+              <button class="btn btn-upgrade" onclick="window.triggerPackageAction('${pkg.name}', '${upgrade!.repo_type}', 'update')">Update</button>
               <button class="btn btn-accent" onclick="window.triggerUninstallAction('${pkg.name}', '${upgrade!.repo_type}')">Uninstall</button>
             </div>
           </div>
@@ -765,7 +786,7 @@ function renderInstalledView(packagesList: LocalPackage[]) {
           <div style="display: flex; gap: 8px; align-items: center; justify-content: space-between; width: 100%;">
             ${alertBadges}
             <div style="display: flex; gap: 8px;">
-              <button class="btn btn-secondary" onclick="window.triggerPackageAction('${pkg.name}', 'official', true)">
+              <button class="btn btn-secondary" onclick="window.triggerPackageAction('${pkg.name}', 'official', 'reinstall')">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 16px; height: 16px;">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
                 </svg>
@@ -878,8 +899,8 @@ function openConfirmationModal(
 }
 
 // Trigger installation or upgrade pipeline
-async function handlePackageAction(pkgName: string, repoType: string, isReinstall: boolean) {
-  if (isReinstall) {
+async function handlePackageAction(pkgName: string, repoType: string, actionType: "install" | "reinstall" | "update") {
+  if (actionType === "reinstall") {
     openConfirmationModal(
       `Confirm Reinstall: ${pkgName}`,
       `Are you sure you want to reinstall ${pkgName}? Reinstalling will download and apply the package again.`,
@@ -889,11 +910,24 @@ async function handlePackageAction(pkgName: string, repoType: string, isReinstal
       pkgName,
       repoType,
       (selectedVersion) => {
-        executePackageUpdateTransaction(pkgName, repoType, true, selectedVersion);
+        executePackageUpdateTransaction(pkgName, repoType, "reinstall", selectedVersion);
+      }
+    );
+  } else if (actionType === "update") {
+    openConfirmationModal(
+      `Confirm Update: ${pkgName}`,
+      `Are you sure you want to update ${pkgName} to the latest version?`,
+      `Update`,
+      `btn-upgrade`, // Orange confirmation button
+      false, // Hide version picker
+      pkgName,
+      repoType,
+      () => {
+        executePackageUpdateTransaction(pkgName, repoType, "update");
       }
     );
   } else {
-    executePackageUpdateTransaction(pkgName, repoType, false);
+    executePackageUpdateTransaction(pkgName, repoType, "install");
   }
 }
 
@@ -914,7 +948,7 @@ async function handleUninstallAction(pkgName: string, repoType: string) {
 }
 
 // Execute update/installation transaction
-async function executePackageUpdateTransaction(pkgName: string, repoType: string, isReinstall: boolean, version?: string) {
+async function executePackageUpdateTransaction(pkgName: string, repoType: string, actionType: "install" | "reinstall" | "update", version?: string) {
   if (currentTransactionId) {
     appendTerminalLine(`Cannot start transaction for "${pkgName}": Another transaction is active.`, "error-log");
     return;
@@ -933,19 +967,24 @@ async function executePackageUpdateTransaction(pkgName: string, repoType: string
   }
 
   // Visual status indicators
-  const actionText = isReinstall ? "Reinstalling" : "Installing";
-  setSystemBusy(true, `${actionText} ${pkgName}`);
+  const actionText = actionType === "reinstall" ? "Reinstalling" : (actionType === "update" ? "Updating" : "Installing");
+  setSystemBusy(true, pkgName === "__all__" ? "Upgrading System" : `${actionText} ${pkgName}`);
   
   // Disable button actions by updating card styles
-  const card = document.getElementById(`pkg-discover-${pkgName}`) || document.getElementById(`pkg-installed-${pkgName}`);
-  if (card) {
-    card.classList.add("installing");
+  if (pkgName !== "__all__") {
+    const card = document.getElementById(`pkg-discover-${pkgName}`) || document.getElementById(`pkg-installed-${pkgName}`);
+    if (card) {
+      card.classList.add("installing");
+    }
   }
 
   const logVer = version ? ` [Version: ${version}]` : "";
-  appendTerminalLine(`-- Spawning ${actionText.toLowerCase()} transaction ${transactionId} for "${pkgName}" [${repoType}]${logVer} --`, "system");
+  const logPrefix = pkgName === "__all__" ? `-- Spawning system upgrade transaction ${transactionId} --` : `-- Spawning ${actionText.toLowerCase()} transaction ${transactionId} for "${pkgName}" [${repoType}]${logVer} --`;
+  appendTerminalLine(logPrefix, "system");
   
-  if (version) {
+  if (pkgName === "__all__") {
+    appendTerminalLine(`[System] Initiating full system upgrade. Sudo/Polkit privilege authentication may be requested...`, "system");
+  } else if (version) {
     const isUrl = version.startsWith("http://") || version.startsWith("https://");
     const sourceDesc = isUrl ? "online package from Arch Linux Archive" : "offline cached version";
     appendTerminalLine(`[System] Downgrading/installing ${sourceDesc} via pacman -U. Polkit escalation (pkexec) will request system auth...`, "system");
@@ -967,8 +1006,11 @@ async function executePackageUpdateTransaction(pkgName: string, repoType: string
     appendTerminalLine(`[System Error] Spawning package manager failed: ${err}`, "error-log");
     // Rollback state immediately
     setSystemBusy(false);
-    if (card) {
-      card.classList.remove("installing");
+    if (pkgName !== "__all__") {
+      const card = document.getElementById(`pkg-discover-${pkgName}`) || document.getElementById(`pkg-installed-${pkgName}`);
+      if (card) {
+        card.classList.remove("installing");
+      }
     }
     currentTransactionId = null;
   }
@@ -1062,13 +1104,13 @@ async function openPackageDetails(pkgName: string, repo: string, isInstalled: bo
   modalActionBtn.className = isUpgradable ? "btn btn-upgrade" : "btn btn-primary";
   if (isUpgradable) {
     modalActionBtn.innerHTML = `Update`;
-    modalActionBtn.onclick = () => handlePackageAction(pkgName, upgrade!.repo_type, true);
+    modalActionBtn.onclick = () => handlePackageAction(pkgName, upgrade!.repo_type, "update");
   } else if (isInstalled) {
     modalActionBtn.innerHTML = `Reinstall`;
-    modalActionBtn.onclick = () => handlePackageAction(pkgName, repo, true);
+    modalActionBtn.onclick = () => handlePackageAction(pkgName, repo, "reinstall");
   } else {
     modalActionBtn.innerHTML = `Install`;
-    modalActionBtn.onclick = () => handlePackageAction(pkgName, repo, false);
+    modalActionBtn.onclick = () => handlePackageAction(pkgName, repo, "install");
   }
 
   // Manage Uninstall button inside the details modal

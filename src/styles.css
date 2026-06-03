@@ -294,7 +294,8 @@ body {
 /* Updates Filter Bar */
 .filter-bar {
   display: flex;
-  gap: 12px;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 8px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.03);
   padding-bottom: 16px;
