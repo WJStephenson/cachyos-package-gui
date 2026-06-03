@@ -1,8 +1,25 @@
 use std::process::{Command, Stdio};
-use std::io::{BufRead, BufReader};
+use std::io::{BufRead, BufReader, Write};
 use std::sync::{Arc, Mutex};
 use std::collections::HashMap;
+use std::fs::File;
+use std::os::unix::fs::PermissionsExt;
 use tauri::Emitter;
+
+// Dynamic setup of GUI askpass helper for password prompts inside paru transactions
+fn setup_askpass() -> Result<String, String> {
+    let path = "/tmp/cachyos-pkgmgr-askpass";
+    let script_content = "#!/bin/bash\n/usr/bin/zenity --entry --title=\"CachyOS Package Manager\" --text=\"Authentication required to install packages:\" --hide-text\n";
+    
+    let mut file = File::create(path).map_err(|e| format!("Failed to create askpass file: {}", e))?;
+    file.write_all(script_content.as_bytes()).map_err(|e| format!("Failed to write askpass file: {}", e))?;
+    
+    let mut perms = file.metadata().map_err(|e| format!("Failed to read metadata: {}", e))?.permissions();
+    perms.set_mode(0o755); // Read, write, execute for owner; read and execute for group and others
+    std::fs::set_permissions(path, perms).map_err(|e| format!("Failed to set permissions: {}", e))?;
+    
+    Ok(path.to_string())
+}
 
 // Structure for representing locally installed packages
 #[derive(serde::Serialize, Clone)]
@@ -443,6 +460,10 @@ fn execute_package_update(
         if paru_exists {
             let mut c = Command::new("paru");
             c.args(["-Syu", "--noconfirm"]);
+            if let Ok(askpass_path) = setup_askpass() {
+                c.env("SUDO_ASKPASS", askpass_path);
+                c.args(["--sudoflags", "-A"]);
+            }
             c
         } else {
             let mut c = Command::new("pkexec");
@@ -485,7 +506,12 @@ fn execute_package_update(
         let is_aur = repo_type.to_lowercase() == "aur";
         if is_aur {
             let mut c = Command::new("paru");
-            c.args(["-S", "--noconfirm", &pkg_name]);
+            c.args(["-S", "--noconfirm"]);
+            if let Ok(askpass_path) = setup_askpass() {
+                c.env("SUDO_ASKPASS", askpass_path);
+                c.args(["--sudoflags", "-A"]);
+            }
+            c.arg(&pkg_name);
             c
         } else {
             let mut c = Command::new("pkexec");
