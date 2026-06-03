@@ -709,6 +709,16 @@ fn cancel_transaction(
     Err("Transaction not found or already completed".to_string())
 }
 
+/// Reboots the system using systemd systemctl command
+#[tauri::command]
+fn reboot_system() -> Result<(), String> {
+    Command::new("systemctl")
+        .arg("reboot")
+        .spawn()
+        .map_err(|e| format!("Failed to initiate system reboot: {}", e))?;
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -723,7 +733,8 @@ pub fn run() {
             get_online_archive_versions,
             execute_package_update,
             execute_package_uninstall,
-            cancel_transaction
+            cancel_transaction,
+            reboot_system
         ])
         .run(tauri::generate_context!())
         .expect("Error while running CachyOS Package Manager application");

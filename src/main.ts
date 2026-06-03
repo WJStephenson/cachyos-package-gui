@@ -84,6 +84,7 @@ let lastDraggedHeight = 220;
 let isDraggingTerminal = false;
 let activeLayout: "grid" | "list" = "grid";
 let isFetchingInstalledPackages = false;
+let lastTransactionWasSystemUpgrade = false;
 
 // DOM Element Selections
 let navDiscover!: HTMLElement;
@@ -819,12 +820,14 @@ function openConfirmationModal(
   showVersionPicker: boolean,
   pkgName: string,
   repoType: string,
-  onConfirm: (selectedVersion?: string) => void
+  onConfirm: (selectedVersion?: string) => void,
+  cancelText: string = "Cancel"
 ) {
   confirmModalTitle.textContent = title;
   confirmModalDesc.textContent = description;
   confirmModalActionBtn.textContent = actionText;
   confirmModalActionBtn.className = `btn ${actionClass}`;
+  confirmModalCancelBtn.textContent = cancelText;
   
   if (showVersionPicker) {
     confirmVersionPickerContainer.style.display = "flex";
@@ -952,6 +955,12 @@ async function executePackageUpdateTransaction(pkgName: string, repoType: string
   if (currentTransactionId) {
     appendTerminalLine(`Cannot start transaction for "${pkgName}": Another transaction is active.`, "error-log");
     return;
+  }
+
+  if (pkgName === "__all__") {
+    lastTransactionWasSystemUpgrade = true;
+  } else {
+    lastTransactionWasSystemUpgrade = false;
   }
 
   // Create unique transaction identifier
@@ -1190,6 +1199,24 @@ function closeConfirmationModal() {
   confirmationModal.classList.remove("active");
 }
 
+function showRebootPrompt() {
+  openConfirmationModal(
+    "Reboot Required",
+    "A full system update has completed successfully. It is recommended to reboot your system to apply all updates. Would you like to reboot now?",
+    "Reboot Now",
+    "btn-upgrade",
+    false,
+    "",
+    "",
+    () => {
+      invoke("reboot_system").catch(err => {
+        appendTerminalLine(`Failed to reboot system: ${err}`, "error-log");
+      });
+    },
+    "Reboot Later"
+  );
+}
+
 // Configures Tauri socket event listeners
 function setupTauriListeners() {
   // Listen for live transaction log lines
@@ -1207,6 +1234,9 @@ function setupTauriListeners() {
 
     if (payload.success) {
       appendTerminalLine(`-- Transaction ${payload.transaction_id} completed successfully! (Exit Code: ${payload.exit_code}) --`, "system");
+      if (lastTransactionWasSystemUpgrade) {
+        showRebootPrompt();
+      }
     } else {
       appendTerminalLine(`-- Transaction ${payload.transaction_id} terminated or failed! (Exit Code: ${payload.exit_code}) --`, "error-log");
     }
